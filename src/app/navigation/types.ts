@@ -9,6 +9,7 @@ export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
+  AuthProviderPlaceholder: { provider: "Google" | "Web3" };
 };
 
 // ─── Feed Stack ───────────────────────────────────────────────────────────────
@@ -70,6 +71,7 @@ export type AppTabParamList = {
 // ─── Root (top-level) ─────────────────────────────────────────────────────────
 
 export type RootStackParamList = {
+  LaunchIntro: undefined;
   Auth: NavigatorScreenParams<AuthStackParamList>;
   App: NavigatorScreenParams<AppTabParamList>;
 };
@@ -114,7 +116,9 @@ export type ProfileStackScreenProps<T extends keyof ProfileStackParamList> = Com
 // ─── Global type augmentation for useNavigation without generic ───────────────
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace ReactNavigation {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     interface RootParamList extends RootStackParamList {}
   }
 }

@@ -10,7 +10,7 @@ export function WelcomeScreen({ navigation }: Props) {
   return (
     <SafeScreen>
       <View className="flex-1 items-center justify-center px-6 bg-white">
-        <Text className="text-3xl font-bold text-brand-dark mb-2">InstaApp</Text>
+        <Text className="text-3xl font-bold text-brand-dark mb-2">Insta App</Text>
         <Text className="text-base text-gray-500 mb-12 text-center">
           Capture and share moments with the world.
         </Text>
