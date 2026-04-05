@@ -1,3 +1,4 @@
+import type { CreatePostDraft } from "@/shared/types/models.types";
 import type { CompositeScreenProps, NavigatorScreenParams } from "@react-navigation/native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -32,9 +33,9 @@ export type SearchStackParamList = {
 // ─── Create Stack ─────────────────────────────────────────────────────────────
 
 export type CreateStackParamList = {
-  CreatePost: undefined;
-  EditPost: { uri: string };
-  Caption: { uri: string; filteredUri?: string };
+  CreatePost: { draft?: CreatePostDraft } | undefined;
+  EditPost: { draft: CreatePostDraft };
+  Caption: { draft: CreatePostDraft };
 };
 
 // ─── Activity Stack ───────────────────────────────────────────────────────────

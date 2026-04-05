@@ -6,6 +6,7 @@ import type {
   AuthResponse,
   AuthTokens,
   CursorPaginatedResponse,
+  UploadResponse,
 } from "@/shared/types/api.types";
 import type {
   AddCommentDto,
@@ -694,6 +695,24 @@ async function handleRequest(config: InternalAxiosRequestConfig): Promise<AxiosR
         config,
         paginate(posts, limitOf(config), getParam(config, "cursor") as string | undefined),
       );
+    }
+
+    if (endpoint === "/upload/image" && method === "POST") {
+      requireAuth(config, db);
+
+      const upload: UploadResponse = {
+        url: `https://res.cloudinary.com/demo/image/upload/v${Date.now()}/${nextId("upload")}.jpg`,
+        key: nextId("asset"),
+        mimeType: "image/jpeg",
+        size: 512_000,
+        width: 1080,
+        height: 1350,
+      };
+
+      return ok(config, {
+        success: true,
+        data: upload,
+      }, 201);
     }
 
     if (endpoint === "/posts" && method === "POST") {

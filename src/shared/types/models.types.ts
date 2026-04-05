@@ -136,6 +136,17 @@ export interface CreatePostDto {
   taggedUserIds?: string[];
 }
 
+export interface CreatePostDraft {
+  uri: string;
+  width: number;
+  height: number;
+  mimeType?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
+  caption?: string;
+  location?: string;
+}
+
 export interface UpdateProfileDto {
   fullName?: string;
   username?: string;
