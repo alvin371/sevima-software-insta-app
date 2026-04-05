@@ -2,7 +2,9 @@ import React from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { SafeScreen } from "@/shared/components/ui/SafeScreen";
 import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuthStore } from "@/features/auth/store/auth.store";
+import type { ProfileStackParamList } from "@/app/navigation/types";
 
 const SETTINGS_ROWS = [
   { label: "Account", screen: "AccountSettings" as const },
@@ -10,7 +12,7 @@ const SETTINGS_ROWS = [
 ];
 
 export function SettingsScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
   const clearAuth = useAuthStore((s) => s.clearAuth);
 
   return (
@@ -26,7 +28,7 @@ export function SettingsScreen() {
           <TouchableOpacity
             key={screen}
             className="px-4 py-4 border-b border-gray-100 flex-row justify-between items-center"
-            onPress={() => (navigation as any).navigate(screen)}
+            onPress={() => navigation.navigate(screen)}
           >
             <Text className="text-base text-brand-dark">{label}</Text>
             <Text className="text-gray-400">›</Text>

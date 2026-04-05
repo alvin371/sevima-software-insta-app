@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, View, type ViewStyle } from "react-native";
+import { Animated, type ViewStyle } from "react-native";
 
 interface SkeletonProps {
   width?: number | `${number}%`;

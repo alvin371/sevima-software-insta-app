@@ -58,7 +58,7 @@ type ButtonProps = TouchableOpacityProps &
 export function Button({ label, variant, size, isLoading, disabled, className, ...props }: ButtonProps) {
   return (
     <TouchableOpacity
-      className={buttonVariants({ variant, size })}
+      className={[buttonVariants({ variant, size }), className].filter(Boolean).join(" ")}
       disabled={disabled || isLoading}
       activeOpacity={0.75}
       {...props}

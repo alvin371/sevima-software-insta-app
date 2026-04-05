@@ -1,6 +1,6 @@
 import React from "react";
-import { View, type ViewProps } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, type StyleProp, type ViewProps, type ViewStyle } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface SafeScreenProps extends ViewProps {
   children: React.ReactNode;
@@ -8,9 +8,22 @@ interface SafeScreenProps extends ViewProps {
 }
 
 export function SafeScreen({ children, edges = ["top", "bottom"], style, ...props }: SafeScreenProps) {
+  const insets = useSafeAreaInsets();
+  const baseStyle: StyleProp<ViewStyle> = [
+    {
+      flex: 1,
+      backgroundColor: "#FFFFFF",
+      paddingTop: edges.includes("top") ? insets.top : 0,
+      paddingBottom: edges.includes("bottom") ? insets.bottom : 0,
+      paddingLeft: edges.includes("left") ? insets.left : 0,
+      paddingRight: edges.includes("right") ? insets.right : 0,
+    },
+    style,
+  ];
+
   return (
-    <SafeAreaView edges={edges} className="flex-1 bg-white" style={style} {...props}>
+    <View style={baseStyle} {...props}>
       {children}
-    </SafeAreaView>
+    </View>
   );
 }
