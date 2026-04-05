@@ -1,14 +1,25 @@
-import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
-import { authStorage } from "./mmkv";
-import { STORAGE_KEYS } from "@/shared/constants/storage";
+import axios, {
+  AxiosAdapter,
+  AxiosError,
+  AxiosRequestConfig,
+  InternalAxiosRequestConfig,
+} from "axios";
 import { ENDPOINTS } from "@/shared/constants/endpoints";
 import type { ApiError, AuthTokens } from "@/shared/types/api.types";
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import { mockApiAdapter } from "./mockApi";
+
+const isMockApiMode =
+  process.env.EXPO_PUBLIC_API_MODE === "mock" || !process.env.EXPO_PUBLIC_API_URL;
+
+const adapter: AxiosAdapter | undefined = isMockApiMode ? mockApiAdapter : undefined;
 
 // ─── Instance ─────────────────────────────────────────────────────────────────
 
 export const apiClient = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL,
+  baseURL: process.env.EXPO_PUBLIC_API_URL ?? "mock://local",
   timeout: 15_000,
+  adapter,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -18,7 +29,7 @@ export const apiClient = axios.create({
 // ─── Request interceptor — attach access token ─────────────────────────────
 
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = authStorage.getString(STORAGE_KEYS.ACCESS_TOKEN);
+  const token = useAuthStore.getState().accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -28,10 +39,10 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 // ─── 401 refresh-retry queue ──────────────────────────────────────────────────
 
 let isRefreshing = false;
-let pendingQueue: Array<{
+let pendingQueue: {
   resolve: (value: string) => void;
   reject: (reason?: unknown) => void;
-}> = [];
+}[] = [];
 
 function flushQueue(token: string | null, error: unknown = null) {
   pendingQueue.forEach(({ resolve, reject }) => {
@@ -54,7 +65,7 @@ apiClient.interceptors.response.use(
       return Promise.reject(normalizeError(error));
     }
 
-    const refreshToken = authStorage.getString(STORAGE_KEYS.REFRESH_TOKEN);
+    const refreshToken = useAuthStore.getState().refreshToken;
 
     if (!refreshToken) {
       clearAuthStorage();
@@ -78,15 +89,26 @@ apiClient.interceptors.response.use(
     originalRequest._retried = true;
 
     try {
-      const { data } = await axios.post<{ tokens: AuthTokens }>(
-        `${process.env.EXPO_PUBLIC_API_URL}${ENDPOINTS.AUTH.REFRESH}`,
+      const refreshClient =
+        adapter != null
+          ? axios.create({
+              baseURL: process.env.EXPO_PUBLIC_API_URL ?? "mock://local",
+              adapter,
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+            })
+          : axios;
+
+      const { data } = await refreshClient.post<{ tokens: AuthTokens }>(
+        `${process.env.EXPO_PUBLIC_API_URL ?? "mock://local"}${ENDPOINTS.AUTH.REFRESH}`,
         { refreshToken },
       );
 
       const { accessToken, refreshToken: newRefreshToken } = data.tokens;
 
-      authStorage.set(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
-      authStorage.set(STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken);
+      useAuthStore.getState().setTokens(accessToken, newRefreshToken);
 
       apiClient.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
       flushQueue(accessToken);
@@ -108,9 +130,7 @@ apiClient.interceptors.response.use(
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function clearAuthStorage() {
-  authStorage.delete(STORAGE_KEYS.ACCESS_TOKEN);
-  authStorage.delete(STORAGE_KEYS.REFRESH_TOKEN);
-  authStorage.delete(STORAGE_KEYS.USER_ID);
+  useAuthStore.getState().clearAuth();
 }
 
 function normalizeError(error: AxiosError<ApiError>): ApiError {

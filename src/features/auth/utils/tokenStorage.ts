@@ -1,35 +1,41 @@
-import { authStorage } from "@/shared/lib/mmkv";
+import * as SecureStore from "expo-secure-store";
 import { STORAGE_KEYS } from "@/shared/constants/storage";
 
 export const tokenStorage = {
-  getAccessToken: (): string | null =>
-    authStorage.getString(STORAGE_KEYS.ACCESS_TOKEN) ?? null,
+  getAccessToken: async (): Promise<string | null> =>
+    SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
 
-  getRefreshToken: (): string | null =>
-    authStorage.getString(STORAGE_KEYS.REFRESH_TOKEN) ?? null,
+  getRefreshToken: async (): Promise<string | null> =>
+    SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN),
 
-  getUserId: (): string | null =>
-    authStorage.getString(STORAGE_KEYS.USER_ID) ?? null,
+  getUserId: async (): Promise<string | null> =>
+    SecureStore.getItemAsync(STORAGE_KEYS.USER_ID),
 
-  setTokens: (accessToken: string, refreshToken: string): void => {
-    authStorage.set(STORAGE_KEYS.ACCESS_TOKEN, accessToken);
-    authStorage.set(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
+  setTokens: async (accessToken: string, refreshToken: string): Promise<void> => {
+    await Promise.all([
+      SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, accessToken),
+      SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, refreshToken),
+    ]);
   },
 
-  setUserId: (userId: string): void => {
-    authStorage.set(STORAGE_KEYS.USER_ID, userId);
+  setUserId: async (userId: string): Promise<void> => {
+    await SecureStore.setItemAsync(STORAGE_KEYS.USER_ID, userId);
   },
 
-  clearAll: (): void => {
-    authStorage.delete(STORAGE_KEYS.ACCESS_TOKEN);
-    authStorage.delete(STORAGE_KEYS.REFRESH_TOKEN);
-    authStorage.delete(STORAGE_KEYS.USER_ID);
+  clearAll: async (): Promise<void> => {
+    await Promise.all([
+      SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
+      SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN),
+      SecureStore.deleteItemAsync(STORAGE_KEYS.USER_ID),
+    ]);
   },
 
-  hasTokens: (): boolean => {
-    return (
-      authStorage.contains(STORAGE_KEYS.ACCESS_TOKEN) &&
-      authStorage.contains(STORAGE_KEYS.REFRESH_TOKEN)
-    );
+  hasTokens: async (): Promise<boolean> => {
+    const [accessToken, refreshToken] = await Promise.all([
+      SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
+      SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN),
+    ]);
+
+    return Boolean(accessToken && refreshToken);
   },
 };

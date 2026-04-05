@@ -23,7 +23,7 @@ interface AuthState {
    * Call once on app mount (synchronous — MMKV reads are sync).
    * Reads persisted tokens from MMKV and populates the store.
    */
-  hydrateFromStorage: () => void;
+  hydrateFromStorage: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()((set) => ({
@@ -33,9 +33,12 @@ export const useAuthStore = create<AuthState>()((set) => ({
   isAuthenticated: false,
   isHydrated: false,
 
-  hydrateFromStorage: () => {
-    const accessToken = tokenStorage.getAccessToken();
-    const refreshToken = tokenStorage.getRefreshToken();
+  hydrateFromStorage: async () => {
+    const [accessToken, refreshToken] = await Promise.all([
+      tokenStorage.getAccessToken(),
+      tokenStorage.getRefreshToken(),
+    ]);
+
     set({
       accessToken,
       refreshToken,
@@ -45,17 +48,17 @@ export const useAuthStore = create<AuthState>()((set) => ({
   },
 
   setTokens: (accessToken, refreshToken) => {
-    tokenStorage.setTokens(accessToken, refreshToken);
+    void tokenStorage.setTokens(accessToken, refreshToken);
     set({ accessToken, refreshToken, isAuthenticated: true });
   },
 
   setCurrentUser: (user) => {
-    tokenStorage.setUserId(user.id);
+    void tokenStorage.setUserId(user.id);
     set({ currentUser: user });
   },
 
   clearAuth: () => {
-    tokenStorage.clearAll();
+    void tokenStorage.clearAll();
     set({
       accessToken: null,
       refreshToken: null,
