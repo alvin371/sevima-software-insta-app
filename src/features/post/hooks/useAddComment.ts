@@ -10,6 +10,7 @@ export function useAddComment(postId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.posts.comments(postId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.posts.detail(postId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.feed.all });
     },
   });
 }

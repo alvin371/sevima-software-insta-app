@@ -148,3 +148,7 @@ export interface AddCommentDto {
   text: string;
   parentId?: string;
 }
+
+export interface UpdateCommentDto {
+  text: string;
+}

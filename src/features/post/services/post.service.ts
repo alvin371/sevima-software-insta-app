@@ -1,7 +1,13 @@
 import { apiClient } from "@/shared/lib/axios";
 import { ENDPOINTS } from "@/shared/constants/endpoints";
 import type { ApiResponse, CursorPaginatedResponse } from "@/shared/types/api.types";
-import type { Post, Comment, AddCommentDto, CreatePostDto } from "@/shared/types/models.types";
+import type {
+  Post,
+  Comment,
+  AddCommentDto,
+  CreatePostDto,
+  UpdateCommentDto,
+} from "@/shared/types/models.types";
 
 export async function getPost(id: string): Promise<Post> {
   const { data } = await apiClient.get<ApiResponse<Post>>(ENDPOINTS.POSTS.DETAIL(id));
@@ -41,6 +47,26 @@ export async function addComment(postId: string, dto: AddCommentDto): Promise<Co
   return data.data;
 }
 
+export async function updateComment(
+  postId: string,
+  commentId: string,
+  dto: UpdateCommentDto,
+): Promise<Comment> {
+  const { data } = await apiClient.patch<ApiResponse<Comment>>(
+    ENDPOINTS.COMMENTS.UPDATE(postId, commentId),
+    dto,
+  );
+  return data.data;
+}
+
 export async function deleteComment(postId: string, commentId: string): Promise<void> {
   await apiClient.delete(ENDPOINTS.COMMENTS.DELETE(postId, commentId));
+}
+
+export async function likeComment(postId: string, commentId: string): Promise<void> {
+  await apiClient.post(ENDPOINTS.COMMENTS.LIKE(postId, commentId));
+}
+
+export async function unlikeComment(postId: string, commentId: string): Promise<void> {
+  await apiClient.delete(ENDPOINTS.COMMENTS.UNLIKE(postId, commentId));
 }

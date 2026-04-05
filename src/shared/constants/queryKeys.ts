@@ -8,6 +8,7 @@ export const queryKeys = {
     detail: (id: string) => ["posts", "detail", id] as const,
     comments: (id: string) => ["posts", id, "comments"] as const,
     likes: (id: string) => ["posts", id, "likes"] as const,
+    comment: (postId: string, commentId: string) => ["posts", postId, "comments", commentId] as const,
   },
   profile: {
     all: ["profile"] as const,

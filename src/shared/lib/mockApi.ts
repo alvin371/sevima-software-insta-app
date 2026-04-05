@@ -15,6 +15,7 @@ import type {
   Notification,
   Post,
   PostPreview,
+  UpdateCommentDto,
   UpdateProfileDto,
   User,
   UserPreview,
@@ -502,6 +503,22 @@ function touchNotificationsForLike(db: MockDb, actorId: string, postId: string) 
   });
 }
 
+function touchNotificationsForCommentLike(db: MockDb, actorId: string, commentId: string) {
+  const comment = db.comments.find((item) => item.id === commentId);
+  if (!comment || comment.authorId === actorId) return;
+
+  db.notifications.unshift({
+    id: nextId("n"),
+    userId: comment.authorId,
+    type: "like_comment",
+    actorId,
+    postId: comment.postId,
+    commentId: comment.id,
+    isRead: false,
+    createdAt: nowIso(),
+  });
+}
+
 function touchNotificationsForFollow(db: MockDb, actorId: string, targetId: string) {
   if (actorId === targetId) return;
 
@@ -864,23 +881,73 @@ async function handleRequest(config: InternalAxiosRequestConfig): Promise<AxiosR
     }
 
     const deleteCommentMatch = endpoint.match(/^\/posts\/([^/]+)\/comments\/([^/]+)$/);
-    if (deleteCommentMatch && method === "DELETE") {
-      const userId = requireAuth(config, db);
+    if (deleteCommentMatch) {
       const postId = deleteCommentMatch[1];
       const commentId = deleteCommentMatch[2];
       const comment = db.comments.find((item) => item.id === commentId && item.postId === postId);
 
       if (!comment) return fail(config, 404, "COMMENT_NOT_FOUND", "Comment not found.");
-      if (comment.authorId !== userId) {
-        return fail(config, 403, "FORBIDDEN", "You can only delete your own comments.");
+
+      if (method === "PATCH") {
+        const userId = requireAuth(config, db);
+        if (comment.authorId !== userId) {
+          return fail(config, 403, "FORBIDDEN", "You can only edit your own comments.");
+        }
+
+        const body = parseRequestBody<UpdateCommentDto>(config);
+        const nextText = body.text.trim();
+        if (!nextText) {
+          return fail(config, 422, "INVALID_COMMENT", "Comment text cannot be empty.");
+        }
+
+        comment.text = nextText;
+        await saveDb(db);
+
+        const response: ApiResponse<Comment> = {
+          success: true,
+          data: commentModel(db, comment, userId),
+        };
+        return ok(config, response);
       }
 
-      db.comments = db.comments.filter(
-        (item) => item.id !== commentId && item.parentId !== commentId,
-      );
-      db.notifications = db.notifications.filter((item) => item.commentId !== commentId);
-      await saveDb(db);
-      return ok(config, { success: true });
+      if (method === "DELETE") {
+        const userId = requireAuth(config, db);
+        if (comment.authorId !== userId) {
+          return fail(config, 403, "FORBIDDEN", "You can only delete your own comments.");
+        }
+
+        db.comments = db.comments.filter(
+          (item) => item.id !== commentId && item.parentId !== commentId,
+        );
+        db.notifications = db.notifications.filter((item) => item.commentId !== commentId);
+        await saveDb(db);
+        return ok(config, { success: true });
+      }
+    }
+
+    const commentLikeMatch = endpoint.match(/^\/posts\/([^/]+)\/comments\/([^/]+)\/like$/);
+    if (commentLikeMatch) {
+      const userId = requireAuth(config, db);
+      const postId = commentLikeMatch[1];
+      const commentId = commentLikeMatch[2];
+      const comment = db.comments.find((item) => item.id === commentId && item.postId === postId);
+
+      if (!comment) return fail(config, 404, "COMMENT_NOT_FOUND", "Comment not found.");
+
+      if (method === "POST") {
+        if (!comment.likedBy.includes(userId)) {
+          comment.likedBy.push(userId);
+          touchNotificationsForCommentLike(db, userId, comment.id);
+          await saveDb(db);
+        }
+        return ok(config, { success: true });
+      }
+
+      if (method === "DELETE") {
+        comment.likedBy = comment.likedBy.filter((id) => id !== userId);
+        await saveDb(db);
+        return ok(config, { success: true });
+      }
     }
 
     const userMatch = endpoint.match(/^\/users\/([^/]+)$/);

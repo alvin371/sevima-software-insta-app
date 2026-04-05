@@ -1,4 +1,4 @@
-import type { Post, PostPreview, User, UserPreview } from "@/shared/types/models.types";
+import type { Comment, Post, PostPreview, User, UserPreview } from "@/shared/types/models.types";
 
 const previewUsers: UserPreview[] = [
   {
@@ -145,6 +145,8 @@ const profilePreviewFeedPosts: Post[] = Array.from({ length: 15 }, (_, index) =>
   buildPost(index + 100, previewUsers[0]),
 );
 
+const allPreviewPosts: Post[] = [...previewFeedPosts, ...profilePreviewFeedPosts];
+
 export const previewExplorePosts: PostPreview[] = [...previewFeedPosts, ...profilePreviewFeedPosts]
   .sort((left, right) => right.likesCount - left.likesCount)
   .map(({ id, media, likesCount, commentsCount }) => ({
@@ -181,3 +183,67 @@ export const previewProfilePosts: PostPreview[] = previewFeedPosts
     likesCount,
     commentsCount,
   }));
+
+export function isPreviewPostId(postId: string): boolean {
+  return postId.startsWith("preview_p_");
+}
+
+export function getPreviewPostById(postId: string): Post | undefined {
+  return allPreviewPosts.find((post) => post.id === postId);
+}
+
+export function getPreviewCommentsByPostId(postId: string): Comment[] {
+  const post = getPreviewPostById(postId);
+  if (!post) return [];
+
+  const createdAt = post.createdAt;
+
+  return [
+    {
+      id: `${postId}_c_1`,
+      postId,
+      author: previewUsers[0],
+      text: "Strong framing on this one. The contrast feels right without getting harsh.",
+      likesCount: 4,
+      isLikedByMe: false,
+      repliesCount: 1,
+      parentId: null,
+      createdAt,
+      replies: [
+        {
+          id: `${postId}_c_1_r_1`,
+          postId,
+          author: previewUsers[2],
+          text: "Agreed. The crop is doing most of the work here.",
+          likesCount: 1,
+          isLikedByMe: false,
+          repliesCount: 0,
+          parentId: `${postId}_c_1`,
+          createdAt,
+        },
+      ],
+    },
+    {
+      id: `${postId}_c_2`,
+      postId,
+      author: previewUsers[1],
+      text: "This would sit well in a tighter editorial set.",
+      likesCount: 2,
+      isLikedByMe: true,
+      repliesCount: 0,
+      parentId: null,
+      createdAt,
+    },
+    {
+      id: `${postId}_c_3`,
+      postId,
+      author: previewUsers[3],
+      text: "The caption and image pairing is working.",
+      likesCount: 0,
+      isLikedByMe: false,
+      repliesCount: 0,
+      parentId: null,
+      createdAt,
+    },
+  ];
+}

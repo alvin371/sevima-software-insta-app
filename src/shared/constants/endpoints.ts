@@ -28,9 +28,13 @@ export const ENDPOINTS = {
   // Comments
   COMMENTS: {
     CREATE: (postId: string) => `/posts/${postId}/comments`,
+    UPDATE: (postId: string, commentId: string) =>
+      `/posts/${postId}/comments/${commentId}`,
     DELETE: (postId: string, commentId: string) =>
       `/posts/${postId}/comments/${commentId}`,
     LIKE: (postId: string, commentId: string) =>
+      `/posts/${postId}/comments/${commentId}/like`,
+    UNLIKE: (postId: string, commentId: string) =>
       `/posts/${postId}/comments/${commentId}/like`,
   },
   // Profile / Users
