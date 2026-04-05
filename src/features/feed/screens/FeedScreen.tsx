@@ -132,6 +132,7 @@ export function FeedScreen() {
           <FeedPostCard
             post={item}
             onPress={(postId) => navigation.navigate("PostDetail", { postId })}
+            onPressComments={(postId) => navigation.navigate("PostDetail", { postId })}
           />
         )}
         keyExtractor={(item) => item.id}
