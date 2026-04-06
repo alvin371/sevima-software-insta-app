@@ -13,7 +13,10 @@ import type { RootStackParamList } from "./types";
 const Root = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
-  const { isAuthenticated, isHydrated, hydrateFromStorage } = useAuthStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isHydrated = useAuthStore((state) => state.isHydrated);
+  const hydrateFromStorage = useAuthStore((state) => state.hydrateFromStorage);
+  const currentUserId = useAuthStore((state) => state.currentUser?.id);
   const [hasCompletedIntro, setHasCompletedIntro] = useState(false);
 
   useEffect(() => {
@@ -32,7 +35,11 @@ export function RootNavigator() {
             {() => <LaunchIntroScreen onFinish={() => setHasCompletedIntro(true)} />}
           </Root.Screen>
         ) : isAuthenticated ? (
-          <Root.Screen name="App" component={AppNavigator} />
+          <Root.Screen
+            name="App"
+            component={AppNavigator}
+            navigationKey={currentUserId ?? "authenticated"}
+          />
         ) : (
           <Root.Screen name="Auth" component={AuthNavigator} />
         )}

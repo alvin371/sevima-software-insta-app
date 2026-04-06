@@ -9,10 +9,13 @@ import { CreateNavigator } from "./CreateNavigator";
 import { ActivityNavigator } from "./ActivityNavigator";
 import { ProfileNavigator } from "./ProfileNavigator";
 import { colors } from "@/shared/constants/colors";
+import { useMe } from "@/features/auth/hooks/useMe";
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
 export function AppNavigator() {
+  useMe();
+
   return (
     <Tab.Navigator
       screenOptions={{

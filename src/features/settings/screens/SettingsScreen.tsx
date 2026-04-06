@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { SafeScreen } from "@/shared/components/ui/SafeScreen";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useAuthStore } from "@/features/auth/store/auth.store";
+import { useLogout } from "@/features/auth/hooks/useLogout";
 import type { ProfileStackParamList } from "@/app/navigation/types";
 
 const SETTINGS_ROWS = [
@@ -13,7 +13,7 @@ const SETTINGS_ROWS = [
 
 export function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
-  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const logoutMutation = useLogout();
 
   return (
     <SafeScreen>
@@ -36,7 +36,7 @@ export function SettingsScreen() {
         ))}
         <TouchableOpacity
           className="px-4 py-4 border-t border-gray-200 mt-4"
-          onPress={clearAuth}
+          onPress={() => logoutMutation.mutate()}
         >
           <Text className="text-base text-red-500 font-semibold">Log Out</Text>
         </TouchableOpacity>

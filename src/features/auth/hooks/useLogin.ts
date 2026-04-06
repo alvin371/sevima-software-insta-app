@@ -10,10 +10,12 @@ export function useLogin() {
   return useMutation({
     mutationFn: login,
     onSuccess: (data) => {
+      // Clear stale cache BEFORE setting isAuthenticated=true to prevent
+      // useMe() from briefly reading a previous user's cached data
+      queryClient.clear();
+      queryClient.setQueryData(queryKeys.auth.me(), data.user);
       setTokens(data.tokens.accessToken, data.tokens.refreshToken);
       setCurrentUser(data.user);
-      queryClient.clear(); // clear any stale cache from a previous session
-      queryClient.setQueryData(queryKeys.auth.me(), data.user);
     },
   });
 }
