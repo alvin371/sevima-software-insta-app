@@ -13,7 +13,12 @@ export function getPostImageHeight(
 }
 
 export function isValidImageUri(uri: string): boolean {
-  return uri.startsWith("http://") || uri.startsWith("https://") || uri.startsWith("file://");
+  return (
+    uri.startsWith("http://") ||
+    uri.startsWith("https://") ||
+    uri.startsWith("file://") ||
+    uri.startsWith("ph://")
+  );
 }
 
 export function getAvatarFallbackColor(username: string): string {
