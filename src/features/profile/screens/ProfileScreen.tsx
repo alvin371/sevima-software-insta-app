@@ -3,8 +3,10 @@ import { View, Text, TouchableOpacity, FlatList, useWindowDimensions } from "rea
 import { SafeScreen } from "@/shared/components/ui/SafeScreen";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { ProfileStackParamList, ProfileStackScreenProps } from "@/app/navigation/types";
+import type { ParamListBase, RouteProp } from "@react-navigation/native";
+import type { ProfileStackParamList } from "@/app/navigation/types";
 import { useAuthStore } from "@/features/auth/store/auth.store";
+import { useMe } from "@/features/auth/hooks/useMe";
 import { useProfile } from "../hooks/useProfile";
 import { useUserPosts } from "../hooks/useUserPosts";
 import { useRefreshOnFocus } from "@/shared/hooks/useRefreshOnFocus";
@@ -19,15 +21,32 @@ import {
   previewProfilePosts,
 } from "@/shared/mocks/screenPreview";
 
-type Props = ProfileStackScreenProps<"Profile">;
-
 export function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
-  const route = useRoute<Props["route"]>();
+  const route = useRoute<RouteProp<ParamListBase, string>>();
   const { width } = useWindowDimensions();
   const currentUser = useAuthStore((state) => state.currentUser);
-  const username = route.params?.username ?? currentUser?.username ?? "";
-  const isPreviewMode = PREVIEW_ENABLED;
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const meQuery = useMe();
+  const routeUsername =
+    route.params &&
+    typeof route.params === "object" &&
+    "username" in route.params &&
+    typeof route.params.username === "string"
+      ? route.params.username
+      : undefined;
+  const myUsername = currentUser?.username ?? meQuery.data?.username ?? "";
+  const isOwnedProfileRoute = route.name === "Profile";
+  const hasExplicitProfileOverride =
+    isOwnedProfileRoute && !!routeUsername && routeUsername !== myUsername;
+  const username = isOwnedProfileRoute
+    ? hasExplicitProfileOverride
+      ? routeUsername
+      : myUsername
+    : (routeUsername ?? myUsername);
+  // Never show preview data when a real user is authenticated — PREVIEW_ENABLED only applies
+  // to truly unauthenticated/standalone screen previews during UI development.
+  const isPreviewMode = PREVIEW_ENABLED && !isAuthenticated;
 
   const profileQuery = useProfile(username);
   const postsQuery = useUserPosts(username);
@@ -44,7 +63,7 @@ export function ProfileScreen() {
     setPreviewCount(PREVIEW_GRID_PAGE_SIZE);
   }, [isPreviewMode]);
 
-  if (!username && !isPreviewMode) {
+  if (!username && !isPreviewMode && !meQuery.isLoading) {
     return (
       <SafeScreen edges={["top"]}>
         <EmptyState
@@ -55,7 +74,10 @@ export function ProfileScreen() {
     );
   }
 
-  if (!isPreviewMode && profileQuery.isLoading) {
+  if (
+    !isPreviewMode &&
+    (profileQuery.isLoading || (isOwnedProfileRoute && meQuery.isLoading && !username))
+  ) {
     return (
       <SafeScreen edges={["top"]}>
         <LoadingSpinner fullScreen />
@@ -88,7 +110,9 @@ export function ProfileScreen() {
   const loadMore = () => {
     if (isPreviewMode) {
       if (!hasMorePreview) return;
-      setPreviewCount((current) => Math.min(current + PREVIEW_GRID_PAGE_SIZE, previewProfilePosts.length));
+      setPreviewCount((current) =>
+        Math.min(current + PREVIEW_GRID_PAGE_SIZE, previewProfilePosts.length),
+      );
       return;
     }
 
@@ -98,7 +122,7 @@ export function ProfileScreen() {
   };
 
   return (
-      <SafeScreen edges={["top"]}>
+    <SafeScreen edges={["top"]}>
       <FlatList
         data={posts}
         numColumns={3}
@@ -133,12 +157,16 @@ export function ProfileScreen() {
                 </View>
               </View>
               <Text className="text-sm font-semibold text-brand-dark">{profile.fullName}</Text>
-              {profile.bio ? <Text className="text-sm text-gray-600 mt-1">{profile.bio}</Text> : null}
+              {profile.bio ? (
+                <Text className="text-sm text-gray-600 mt-1">{profile.bio}</Text>
+              ) : null}
               {profile.website ? (
                 <Text className="text-sm text-brand-primary mt-1">{profile.website}</Text>
               ) : null}
               {isPreviewMode ? (
-                <Text className="text-xs text-gray-400 mt-3">Preview mode uses local profile fixtures.</Text>
+                <Text className="text-xs text-gray-400 mt-3">
+                  Preview mode uses local profile fixtures.
+                </Text>
               ) : null}
             </View>
 
@@ -173,10 +201,7 @@ export function ProfileScreen() {
           ) : null
         }
         renderItem={({ item, index }) => (
-          <View
-            className="mb-2"
-            style={{ marginRight: index % 3 === 2 ? 0 : 8 }}
-          >
+          <View className="mb-2" style={{ marginRight: index % 3 === 2 ? 0 : 8 }}>
             <PostGridTile
               post={item}
               size={tileSize}

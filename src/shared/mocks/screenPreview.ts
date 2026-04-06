@@ -105,7 +105,7 @@ const previewDates = [
   "2026-04-01T17:15:00.000Z",
 ] as const;
 
-export const PREVIEW_ENABLED = __DEV__;
+export const PREVIEW_ENABLED = process.env.EXPO_PUBLIC_PREVIEW_MODE === "true";
 export const PREVIEW_FEED_PAGE_SIZE = 4;
 export const PREVIEW_GRID_PAGE_SIZE = 12;
 

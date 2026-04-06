@@ -13,13 +13,15 @@ import {
   PREVIEW_GRID_PAGE_SIZE,
   previewExplorePosts,
 } from "@/shared/mocks/screenPreview";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 
 export function ExploreScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<SearchStackParamList>>();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { width } = useWindowDimensions();
   const exploreQuery = useExplore();
   const [previewCount, setPreviewCount] = useState(PREVIEW_GRID_PAGE_SIZE);
-  const isPreviewMode = PREVIEW_ENABLED;
+  const isPreviewMode = PREVIEW_ENABLED && !isAuthenticated;
   const posts = isPreviewMode
     ? previewExplorePosts.slice(0, previewCount)
     : (exploreQuery.data ?? []);

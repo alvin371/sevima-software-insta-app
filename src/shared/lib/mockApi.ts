@@ -87,6 +87,7 @@ type MockNotificationRecord = {
 };
 
 type MockDb = {
+  schemaVersion: number;
   users: MockUserRecord[];
   posts: MockPostRecord[];
   comments: MockCommentRecord[];
@@ -97,6 +98,7 @@ type MockDb = {
 
 const DEFAULT_LIMIT = 20;
 const NETWORK_DELAY_MS = 120;
+const SCHEMA_VERSION = 2;
 
 const mockUsers = [
   {
@@ -118,7 +120,7 @@ const mockUsers = [
     fullName: "Maya Rahma",
     email: "maya@instaapp.dev",
     password: "password123",
-    avatarUrl: null,
+    avatarUrl: "https://i.pravatar.cc/150?u=maya-rahma-instaapp",
     bio: "Street photos, coffee stops, and night markets.",
     website: null,
     isPrivate: false,
@@ -131,7 +133,7 @@ const mockUsers = [
     fullName: "Rio Saputra",
     email: "rio@instaapp.dev",
     password: "password123",
-    avatarUrl: null,
+    avatarUrl: "https://i.pravatar.cc/150?u=rio-saputra-instaapp",
     bio: "Designer building quiet interfaces.",
     website: "https://rio.design",
     isPrivate: false,
@@ -177,6 +179,102 @@ const mockPosts = [
     createdAt: "2026-04-02T15:45:00.000Z",
     updatedAt: "2026-04-02T15:45:00.000Z",
   },
+  {
+    id: "p_4",
+    authorId: "u_1",
+    media: [buildMedia("m_4", "https://images.unsplash.com/photo-1498050108023-c5249f4df085")],
+    caption: "Shipping a cleaner build with fewer moving parts.",
+    location: "Surabaya",
+    taggedUserIds: [],
+    likedBy: ["u_2", "u_3"],
+    savedBy: [],
+    createdAt: "2026-04-01T09:00:00.000Z",
+    updatedAt: "2026-04-01T09:00:00.000Z",
+  },
+  {
+    id: "p_5",
+    authorId: "u_1",
+    media: [buildMedia("m_5", "https://images.unsplash.com/photo-1516321318423-f06f85e504b3")],
+    caption: "Late night debugging sessions hit different when the playlist is right.",
+    location: "Jakarta",
+    taggedUserIds: [],
+    likedBy: ["u_3"],
+    savedBy: [],
+    createdAt: "2026-03-28T22:10:00.000Z",
+    updatedAt: "2026-03-28T22:10:00.000Z",
+  },
+  {
+    id: "p_6",
+    authorId: "u_2",
+    media: [buildMedia("m_6", "https://images.unsplash.com/photo-1521572267360-ee0c2909d518")],
+    caption: "Fabric study for a campaign that still needs a better name.",
+    location: "Bali",
+    taggedUserIds: [],
+    likedBy: ["u_1", "u_3"],
+    savedBy: [],
+    createdAt: "2026-03-31T14:00:00.000Z",
+    updatedAt: "2026-03-31T14:00:00.000Z",
+  },
+  {
+    id: "p_7",
+    authorId: "u_2",
+    media: [buildMedia("m_7", "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f")],
+    caption: "Quiet styling notes and a sharper silhouette.",
+    location: "Semarang",
+    taggedUserIds: [],
+    likedBy: ["u_1"],
+    savedBy: [],
+    createdAt: "2026-03-25T10:30:00.000Z",
+    updatedAt: "2026-03-25T10:30:00.000Z",
+  },
+  {
+    id: "p_8",
+    authorId: "u_2",
+    media: [buildMedia("m_8", "https://images.unsplash.com/photo-1543269865-cbf427effbad")],
+    caption: "Morning ritual before the city noise starts.",
+    location: "Yogyakarta",
+    taggedUserIds: [],
+    likedBy: ["u_3"],
+    savedBy: [],
+    createdAt: "2026-03-20T07:45:00.000Z",
+    updatedAt: "2026-03-20T07:45:00.000Z",
+  },
+  {
+    id: "p_9",
+    authorId: "u_3",
+    media: [buildMedia("m_9", "https://images.unsplash.com/photo-1483058712412-4245e9b90334")],
+    caption: "Clean desk, clear head. The interface follows.",
+    location: "Jakarta",
+    taggedUserIds: [],
+    likedBy: ["u_1", "u_2"],
+    savedBy: [],
+    createdAt: "2026-03-30T16:00:00.000Z",
+    updatedAt: "2026-03-30T16:00:00.000Z",
+  },
+  {
+    id: "p_10",
+    authorId: "u_3",
+    media: [buildMedia("m_10", "https://images.unsplash.com/photo-1558655146-d09347e92766")],
+    caption: "Design tokens and a fresh component library. Slowly but surely.",
+    location: "Bandung",
+    taggedUserIds: [],
+    likedBy: ["u_2"],
+    savedBy: [],
+    createdAt: "2026-03-22T13:15:00.000Z",
+    updatedAt: "2026-03-22T13:15:00.000Z",
+  },
+  {
+    id: "p_11",
+    authorId: "u_3",
+    media: [buildMedia("m_11", "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d")],
+    caption: "When the wireframe finally makes sense on paper.",
+    location: "Jakarta",
+    taggedUserIds: ["u_1"],
+    likedBy: ["u_1"],
+    savedBy: [],
+    createdAt: "2026-03-17T09:00:00.000Z",
+    updatedAt: "2026-03-17T09:00:00.000Z",
+  },
 ] satisfies MockPostRecord[];
 
 const mockComments = [
@@ -198,12 +296,69 @@ const mockComments = [
     parentId: null,
     createdAt: "2026-04-02T16:00:00.000Z",
   },
+  {
+    id: "c_3",
+    postId: "p_4",
+    authorId: "u_3",
+    text: "Fewer moving parts is always the answer.",
+    likedBy: ["u_1"],
+    parentId: null,
+    createdAt: "2026-04-01T09:30:00.000Z",
+  },
+  {
+    id: "c_4",
+    postId: "p_6",
+    authorId: "u_1",
+    text: "The lighting on this is incredible.",
+    likedBy: ["u_2"],
+    parentId: null,
+    createdAt: "2026-03-31T15:00:00.000Z",
+  },
+  {
+    id: "c_5",
+    postId: "p_6",
+    authorId: "u_3",
+    text: "Love the composition here.",
+    likedBy: [],
+    parentId: null,
+    createdAt: "2026-03-31T16:20:00.000Z",
+  },
+  {
+    id: "c_6",
+    postId: "p_9",
+    authorId: "u_2",
+    text: "That desk setup is everything.",
+    likedBy: ["u_3"],
+    parentId: null,
+    createdAt: "2026-03-30T17:00:00.000Z",
+  },
+  {
+    id: "c_7",
+    postId: "p_9",
+    authorId: "u_1",
+    text: "What monitor is that?",
+    likedBy: [],
+    parentId: null,
+    createdAt: "2026-03-30T18:30:00.000Z",
+  },
+  {
+    id: "c_8",
+    postId: "p_2",
+    authorId: "u_1",
+    text: "The playlist makes the wireframe.",
+    likedBy: ["u_3"],
+    parentId: null,
+    createdAt: "2026-04-03T10:00:00.000Z",
+  },
 ] satisfies MockCommentRecord[];
 
 const mockFollows = [
   { followerId: "u_1", followingId: "u_2" },
   { followerId: "u_1", followingId: "u_3" },
   { followerId: "u_2", followingId: "u_1" },
+  { followerId: "u_2", followingId: "u_3" },
+  { followerId: "u_3", followingId: "u_1" },
+  { followerId: "u_3", followingId: "u_2" },
 ] satisfies MockFollowRecord[];
 
 const mockNotifications = [
@@ -226,6 +381,96 @@ const mockNotifications = [
     isRead: false,
     createdAt: "2026-04-02T16:00:00.000Z",
   },
+  {
+    id: "n_3",
+    userId: "u_1",
+    type: "like_post",
+    actorId: "u_2",
+    postId: "p_4",
+    isRead: false,
+    createdAt: "2026-04-01T09:20:00.000Z",
+  },
+  {
+    id: "n_4",
+    userId: "u_1",
+    type: "like_post",
+    actorId: "u_3",
+    postId: "p_4",
+    isRead: false,
+    createdAt: "2026-04-01T09:25:00.000Z",
+  },
+  {
+    id: "n_5",
+    userId: "u_1",
+    type: "comment",
+    actorId: "u_3",
+    postId: "p_4",
+    commentId: "c_3",
+    isRead: false,
+    createdAt: "2026-04-01T09:30:00.000Z",
+  },
+  {
+    id: "n_6",
+    userId: "u_2",
+    type: "like_post",
+    actorId: "u_1",
+    postId: "p_6",
+    isRead: false,
+    createdAt: "2026-03-31T15:00:00.000Z",
+  },
+  {
+    id: "n_7",
+    userId: "u_2",
+    type: "comment",
+    actorId: "u_1",
+    postId: "p_6",
+    commentId: "c_4",
+    isRead: false,
+    createdAt: "2026-03-31T15:05:00.000Z",
+  },
+  {
+    id: "n_8",
+    userId: "u_3",
+    type: "like_post",
+    actorId: "u_1",
+    postId: "p_9",
+    isRead: false,
+    createdAt: "2026-03-30T16:30:00.000Z",
+  },
+  {
+    id: "n_9",
+    userId: "u_3",
+    type: "comment",
+    actorId: "u_2",
+    postId: "p_9",
+    commentId: "c_6",
+    isRead: false,
+    createdAt: "2026-03-30T17:00:00.000Z",
+  },
+  {
+    id: "n_10",
+    userId: "u_3",
+    type: "follow",
+    actorId: "u_2",
+    isRead: false,
+    createdAt: "2026-03-03T12:05:00.000Z",
+  },
+  {
+    id: "n_11",
+    userId: "u_2",
+    type: "follow",
+    actorId: "u_3",
+    isRead: false,
+    createdAt: "2026-03-03T12:06:00.000Z",
+  },
+  {
+    id: "n_12",
+    userId: "u_1",
+    type: "follow",
+    actorId: "u_3",
+    isRead: false,
+    createdAt: "2026-03-03T12:07:00.000Z",
+  },
 ] satisfies MockNotificationRecord[];
 
 function buildMedia(id: string, url: string): MediaItem {
@@ -241,6 +486,7 @@ function buildMedia(id: string, url: string): MediaItem {
 
 function buildInitialDb(): MockDb {
   return {
+    schemaVersion: SCHEMA_VERSION,
     users: [...mockUsers],
     posts: [...mockPosts],
     comments: [...mockComments],
@@ -259,7 +505,13 @@ async function loadDb(): Promise<MockDb> {
   }
 
   try {
-    return JSON.parse(raw) as MockDb;
+    const parsed = JSON.parse(raw) as MockDb;
+    if ((parsed.schemaVersion ?? 0) < SCHEMA_VERSION) {
+      const seeded = buildInitialDb();
+      await saveDb(seeded);
+      return seeded;
+    }
+    return parsed;
   } catch {
     const seeded = buildInitialDb();
     await saveDb(seeded);
@@ -688,12 +940,30 @@ async function handleRequest(config: InternalAxiosRequestConfig): Promise<AxiosR
     }
 
     if (endpoint === "/feed" && method === "GET") {
-      const posts = [...db.posts]
+      let feedPosts: MockPostRecord[];
+
+      if (viewerId) {
+        const followingIds = db.follows
+          .filter((f) => f.followerId === viewerId)
+          .map((f) => f.followingId);
+
+        if (followingIds.length > 0) {
+          const relevant = new Set([viewerId, ...followingIds]);
+          feedPosts = db.posts.filter((p) => relevant.has(p.authorId));
+        } else {
+          feedPosts = [...db.posts];
+        }
+      } else {
+        feedPosts = [...db.posts];
+      }
+
+      const sorted = feedPosts
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .map((post) => postModel(db, post, viewerId));
+
       return ok(
         config,
-        paginate(posts, limitOf(config), getParam(config, "cursor") as string | undefined),
+        paginate(sorted, limitOf(config), getParam(config, "cursor") as string | undefined),
       );
     }
 

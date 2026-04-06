@@ -13,12 +13,14 @@ import {
   PREVIEW_FEED_PAGE_SIZE,
   previewFeedPosts,
 } from "@/shared/mocks/screenPreview";
+import { useAuthStore } from "@/features/auth/store/auth.store";
 
 export function FeedScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<FeedStackParamList>>();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const feedQuery = useFeed();
   const [previewCount, setPreviewCount] = useState(PREVIEW_FEED_PAGE_SIZE);
-  const isPreviewMode = PREVIEW_ENABLED;
+  const isPreviewMode = PREVIEW_ENABLED && !isAuthenticated;
   const livePosts = feedQuery.data?.pages.flatMap((page) => page.data) ?? [];
   const posts = isPreviewMode ? previewFeedPosts.slice(0, previewCount) : livePosts;
   const hasMorePreview = previewCount < previewFeedPosts.length;
